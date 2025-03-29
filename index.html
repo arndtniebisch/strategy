@@ -59,7 +59,10 @@
       Click on a territory to attack an adjacent one or move armies between
       friendly territories.
     </p>
-    <p id="turnIndicator">Player 1's turn</p>
+    <div id="turnIndicator">
+      <p>Player 1's turn</p>
+      <p>Select an attacking territory and a territory to attack.</p>
+    </div>
     <p id="movePhaseIndicator">You can now move armies or skip.</p>
     <button id="skipMoveButton" style="display: none" onclick="skipMovePhase()">
       Skip Move Phase
@@ -140,7 +143,7 @@
           id: `t12`,
           owner: "player1",
           armies: 3,
-          neighbours: ["t6", "t7", "t8", "t13", "t18", "t17", "t16"],
+          neighbours: ["t6", "t7", "t8", "t13", "t18", "t17", "t16", "t11"],
         },
         {
           id: `t13`,
@@ -371,17 +374,26 @@
             });
           }
         });
-        const mapHTML = document.querySelector("#map");
-        const attackerHTML = mapHTML.querySelector("#" + attackerTerritory.id);
-        const attackedHTML = mapHTML.querySelector("#" + attackedTerritory.id);
-        attackerHTML.classList.add("attacking");
-        attackedHTML.classList.add("defending");
-        alert(`${attackerTerritory.id} attacks ${attackedTerritory.id}`);
-        setTimeout(() => {
-          attack(attackerTerritory, attackedTerritory);
-          attackerHTML.classList.remove("attacking");
-          attackedHTML.classList.remove("defending");
-        }, 1000);
+        if (attackedTerritory && attackedTerritory) {
+          const mapHTML = document.querySelector("#map");
+          const attackerHTML = mapHTML.querySelector(
+            "#" + attackerTerritory.id
+          );
+          const attackedHTML = mapHTML.querySelector(
+            "#" + attackedTerritory.id
+          );
+          attackerHTML.classList.add("attacking");
+          attackedHTML.classList.add("defending");
+          alert(`${attackerTerritory.id} attacks ${attackedTerritory.id}`);
+          setTimeout(() => {
+            attack(attackerTerritory, attackedTerritory);
+            attackerHTML.classList.remove("attacking");
+            attackedHTML.classList.remove("defending");
+          }, 1000);
+        }else{
+            alert("I skip this turn")
+            switchTurn();
+        }
       }
 
       function switchTurn() {
