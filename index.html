@@ -298,7 +298,7 @@
         movePhase = false;
         switchTurn();
         //document.getElementById("movePhaseIndicator").style.display = "block";
-       // document.getElementById("skipMoveButton").style.display = "block";
+        // document.getElementById("skipMoveButton").style.display = "block";
       }
 
       function moveArmies(from, to) {
@@ -347,7 +347,6 @@
         const aiTerritories = territories.filter(
           (territory) => territory.owner === "player2"
         );
-        console.log("aiTerritories", aiTerritories);
         const strongestTerritories = aiTerritories.sort((a, b) => {
           if (a.armies > b.armies) {
             return -1;
@@ -357,7 +356,6 @@
           }
           return 0;
         });
-        console.log("strongestTerritories", strongestTerritories);
         attackerTerritory = null;
         attackedTerritory = null;
         strongestTerritories.forEach((territory) => {
@@ -373,10 +371,17 @@
             });
           }
         });
-        console.log("attackerTerritory", attackerTerritory)
-        console.log("attackedTerritory",attackedTerritory)
-        alert(`${attackerTerritory.id} attacks ${attackedTerritory.id}`)
-        attack(attackerTerritory, attackedTerritory);
+        const mapHTML = document.querySelector("#map");
+        const attackerHTML = mapHTML.querySelector("#" + attackerTerritory.id);
+        const attackedHTML = mapHTML.querySelector("#" + attackedTerritory.id);
+        attackerHTML.classList.add("attacking");
+        attackedHTML.classList.add("defending");
+        alert(`${attackerTerritory.id} attacks ${attackedTerritory.id}`);
+        setTimeout(() => {
+          attack(attackerTerritory, attackedTerritory);
+          attackerHTML.classList.remove("attacking");
+          attackedHTML.classList.remove("defending");
+        }, 1000);
       }
 
       function switchTurn() {
