@@ -28,23 +28,49 @@
     <script>
         let currentPlayer = "player1";
         let totalArmies = 60;
-        let territories = [];
+        let territories = [
+            { id: `t1`, owner: "player1", armies: 3, neighbours: ['t2','t7','t6'] },
+            { id: `t2`, owner: "player2", armies: 3, neighbours: ['t1','t6','t7', 't8', 't3'] },
+            { id: `t3`, owner: "player1", armies: 3, neighbours: ['t2','t7','t8', 't9', 't4']},
+            { id: `t4`, owner: "player2", armies: 3, neighbours: ['t3','t8','t9', 't10', 't5'] },
+            { id: `t5`, owner: "player2", armies: 3, neighbours: ['t4','t9','t10'] },
+            { id: `t6`, owner: "player1", armies: 3, neighbours: ['t1','t2','t7', 't12', 't11'] },
+            { id: `t7`, owner: "player2", armies: 3, neighbours: ['t1','t2','t3', 't8', 't13', 't12', 't11', 't6'] },
+            { id: `t8`, owner: "player1", armies: 3, neighbours: ['t2','t3','t4', 't9', 't14', 't13', 't12', 't7']},
+            { id: `t9`, owner: "player2", armies: 3, neighbours: ['t3','t4','t5', 't10', 't15', 't14', 't13', 't8'] },
+            { id: `t10`, owner: "player1", armies: 3, neighbours: ['t4','t5','t15', 't14', 't9'] },
+            { id: `t11`, owner: "player2", armies: 3, neighbours: ['t6','t7','t12', 't17', 't16'] },
+            { id: `t12`, owner: "player1", armies: 3, neighbours: ['t6','t7','t8', 't13', 't18', 't17', 't16'] },
+            { id: `t13`, owner: "player1", armies: 3, neighbours: ['t7','t8','t9', 't14', 't19', 't18', 't17', 't12'] },
+            { id: `t14`, owner:"player2" , armies: 3, neighbours: ['t8','t9','t10', 't15', 't20', 't19', 't18', 't13'] },
+            { id: `t15`, owner: "player2", armies: 3, neighbours: ['t9','t10','t20', 't19', 't14'] },
+            { id: `t16`, owner: "player1", armies: 3, neighbours: ['t11','t12','t17', 't22', 't21'] },
+            { id: `t17`, owner: "player2", armies: 3, neighbours: ['t11','t12','t13', 't18', 't23', 't22', 't21', 't16'] },
+            { id: `t18`, owner: "player2", armies: 3, neighbours: ['t12','t13','t14', 't19', 't24', 't23', 't22', 't17'] },
+            { id: `t19`, owner: "player1", armies: 3, neighbours: ['t13','t14','t15', 't20', 't25', 't24', 't23', 't18'] },
+            { id: `t20`, owner: "player1", armies: 3, neighbours: ['t14','t15','t25', 't24', 't19'] },
+            { id: `t21`, owner: "player1", armies: 3, neighbours: ['t16','t17','t22'] },
+            { id: `t22`, owner: "player2", armies: 3, neighbours: ['t21','t16','t17', 't18', 't23'] },
+            { id: `t23`, owner:"player2", armies: 3, neighbours: ['t22','t17','t18', 't19', 't24'] },            
+            { id: `t24`, owner: "player2", armies: 3, neighbours: ['t23','t18','t19', 't20', 't25']},
+            { id: `t25`, owner: "player1", armies: 3, neighbours: ['t24','t19','t20', 't25'] },
+
+        ];
+
         let map = document.getElementById("map");
         let selectedTerritory = null;
         let movePhase = false;
 
         function initializeGame() {
-            for (let i = 1; i <= 20; i++) {
-                let owner = Math.random() < 0.5 ? "player1" : "player2";
-                let armies = Math.floor(Math.random() * 6) + 1;
+            territories.forEach((territoryData)=>{
                 let territory = document.createElement("div");
-                territory.classList.add("territory", owner);
-                territory.id = `t${i}`;
-                territory.innerHTML = `${owner === "player1" ? "P1" : "P2"}<br><span class='army-count'>${armies}</span>`;
+                territory.classList.add("territory", territoryData.owner);
+                territory.id = territoryData.id;
+                territory.innerHTML = `${territoryData.owner}<br><span class='army-count'>Armies:${territoryData.armies}</span><br><span>${territoryData.id}</span>`;
                 territory.onclick = () => selectTerritory(territory);
                 map.appendChild(territory);
-                territories.push({ id: `t${i}`, owner, armies });
-            }
+                
+            })
         }
 
         function selectTerritory(territory) {
@@ -77,6 +103,10 @@
 
             if (attackerData.owner === defenderData.owner) {
                 alert("You cannot attack your own territory!");
+                return;
+            }
+            if(!attackerData.neighbours.includes(defenderData.id)){
+                alert("You can only attack neigbors!");
                 return;
             }
 
@@ -144,7 +174,8 @@
         function updateTerritories() {
             territories.forEach(t => {
                 let element = document.getElementById(t.id);
-                element.innerHTML = `${t.owner === "player1" ? "P1" : "P2"}<br><span class='army-count'>${t.armies}</span>`;
+                element.innerHTML = `${t.owner}<br><span class='army-count'>Armies:${t.armies}</span><br><span>${t.id}</span>`;
+
             });
         }
 
