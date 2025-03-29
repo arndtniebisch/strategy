@@ -1,190 +1,395 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Risk-Like Game</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        #map { display: grid; grid-template-columns: repeat(5, 100px); gap: 10px; justify-content: center; margin-top: 20px; }
-        .territory { width: 100px; height: 100px; border: 2px solid black; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
-        .player1 { background-color: lightblue; }
-        .player2 { background-color: lightcoral; }
-        .attacking { border: 4px solid yellow; }
-        .defending { border: 4px solid red; }
-        .moving { border: 4px solid green; }
-        #turnIndicator { font-weight: bold; margin-top: 20px; }
-        #movePhaseIndicator { margin-top: 10px; font-weight: bold; color: green; display: none; }
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+      }
+      #map {
+        display: grid;
+        grid-template-columns: repeat(5, 100px);
+        gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
+      }
+      .territory {
+        width: 100px;
+        height: 100px;
+        border: 2px solid black;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+      .player1 {
+        background-color: lightblue;
+      }
+      .player2 {
+        background-color: lightcoral;
+      }
+      .attacking {
+        border: 4px solid yellow;
+      }
+      .defending {
+        border: 4px solid red;
+      }
+      .moving {
+        border: 4px solid green;
+      }
+      #turnIndicator {
+        font-weight: bold;
+        margin-top: 20px;
+      }
+      #movePhaseIndicator {
+        margin-top: 10px;
+        font-weight: bold;
+        color: green;
+        display: none;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Risk-Like Strategy Game</h1>
-    <p>Click on a territory to attack an adjacent one or move armies between friendly territories.</p>
+    <p>
+      Click on a territory to attack an adjacent one or move armies between
+      friendly territories.
+    </p>
     <p id="turnIndicator">Player 1's turn</p>
     <p id="movePhaseIndicator">You can now move armies or skip.</p>
-    <button id="skipMoveButton" style="display: none;" onclick="skipMovePhase()">Skip Move Phase</button>
+    <button id="skipMoveButton" style="display: none" onclick="skipMovePhase()">
+      Skip Move Phase
+    </button>
     <div id="map"></div>
-    
+
     <script>
-        let currentPlayer = "player1";
-        let totalArmies = 60;
-        let territories = [
-            { id: `t1`, owner: "player1", armies: 3, neighbours: ['t2','t7','t6'] },
-            { id: `t2`, owner: "player2", armies: 3, neighbours: ['t1','t6','t7', 't8', 't3'] },
-            { id: `t3`, owner: "player1", armies: 3, neighbours: ['t2','t7','t8', 't9', 't4']},
-            { id: `t4`, owner: "player2", armies: 3, neighbours: ['t3','t8','t9', 't10', 't5'] },
-            { id: `t5`, owner: "player2", armies: 3, neighbours: ['t4','t9','t10'] },
-            { id: `t6`, owner: "player1", armies: 3, neighbours: ['t1','t2','t7', 't12', 't11'] },
-            { id: `t7`, owner: "player2", armies: 3, neighbours: ['t1','t2','t3', 't8', 't13', 't12', 't11', 't6'] },
-            { id: `t8`, owner: "player1", armies: 3, neighbours: ['t2','t3','t4', 't9', 't14', 't13', 't12', 't7']},
-            { id: `t9`, owner: "player2", armies: 3, neighbours: ['t3','t4','t5', 't10', 't15', 't14', 't13', 't8'] },
-            { id: `t10`, owner: "player1", armies: 3, neighbours: ['t4','t5','t15', 't14', 't9'] },
-            { id: `t11`, owner: "player2", armies: 3, neighbours: ['t6','t7','t12', 't17', 't16'] },
-            { id: `t12`, owner: "player1", armies: 3, neighbours: ['t6','t7','t8', 't13', 't18', 't17', 't16'] },
-            { id: `t13`, owner: "player1", armies: 3, neighbours: ['t7','t8','t9', 't14', 't19', 't18', 't17', 't12'] },
-            { id: `t14`, owner:"player2" , armies: 3, neighbours: ['t8','t9','t10', 't15', 't20', 't19', 't18', 't13'] },
-            { id: `t15`, owner: "player2", armies: 3, neighbours: ['t9','t10','t20', 't19', 't14'] },
-            { id: `t16`, owner: "player1", armies: 3, neighbours: ['t11','t12','t17', 't22', 't21'] },
-            { id: `t17`, owner: "player2", armies: 3, neighbours: ['t11','t12','t13', 't18', 't23', 't22', 't21', 't16'] },
-            { id: `t18`, owner: "player2", armies: 3, neighbours: ['t12','t13','t14', 't19', 't24', 't23', 't22', 't17'] },
-            { id: `t19`, owner: "player1", armies: 3, neighbours: ['t13','t14','t15', 't20', 't25', 't24', 't23', 't18'] },
-            { id: `t20`, owner: "player1", armies: 3, neighbours: ['t14','t15','t25', 't24', 't19'] },
-            { id: `t21`, owner: "player1", armies: 3, neighbours: ['t16','t17','t22'] },
-            { id: `t22`, owner: "player2", armies: 3, neighbours: ['t21','t16','t17', 't18', 't23'] },
-            { id: `t23`, owner:"player2", armies: 3, neighbours: ['t22','t17','t18', 't19', 't24'] },            
-            { id: `t24`, owner: "player2", armies: 3, neighbours: ['t23','t18','t19', 't20', 't25']},
-            { id: `t25`, owner: "player1", armies: 3, neighbours: ['t24','t19','t20', 't25'] },
+      let currentPlayer = "player1";
+      let totalArmies = 60;
+      let territories = [
+        {
+          id: `t1`,
+          owner: "player1",
+          armies: 3,
+          neighbours: ["t2", "t7", "t6"],
+        },
+        {
+          id: `t2`,
+          owner: "player2",
+          armies: 3,
+          neighbours: ["t1", "t6", "t7", "t8", "t3"],
+        },
+        {
+          id: `t3`,
+          owner: "player1",
+          armies: 3,
+          neighbours: ["t2", "t7", "t8", "t9", "t4"],
+        },
+        {
+          id: `t4`,
+          owner: "player2",
+          armies: 3,
+          neighbours: ["t3", "t8", "t9", "t10", "t5"],
+        },
+        {
+          id: `t5`,
+          owner: "player2",
+          armies: 3,
+          neighbours: ["t4", "t9", "t10"],
+        },
+        {
+          id: `t6`,
+          owner: "player1",
+          armies: 3,
+          neighbours: ["t1", "t2", "t7", "t12", "t11"],
+        },
+        {
+          id: `t7`,
+          owner: "player2",
+          armies: 3,
+          neighbours: ["t1", "t2", "t3", "t8", "t13", "t12", "t11", "t6"],
+        },
+        {
+          id: `t8`,
+          owner: "player1",
+          armies: 3,
+          neighbours: ["t2", "t3", "t4", "t9", "t14", "t13", "t12", "t7"],
+        },
+        {
+          id: `t9`,
+          owner: "player2",
+          armies: 3,
+          neighbours: ["t3", "t4", "t5", "t10", "t15", "t14", "t13", "t8"],
+        },
+        {
+          id: `t10`,
+          owner: "player1",
+          armies: 3,
+          neighbours: ["t4", "t5", "t15", "t14", "t9"],
+        },
+        {
+          id: `t11`,
+          owner: "player2",
+          armies: 3,
+          neighbours: ["t6", "t7", "t12", "t17", "t16"],
+        },
+        {
+          id: `t12`,
+          owner: "player1",
+          armies: 3,
+          neighbours: ["t6", "t7", "t8", "t13", "t18", "t17", "t16"],
+        },
+        {
+          id: `t13`,
+          owner: "player1",
+          armies: 3,
+          neighbours: ["t7", "t8", "t9", "t14", "t19", "t18", "t17", "t12"],
+        },
+        {
+          id: `t14`,
+          owner: "player2",
+          armies: 3,
+          neighbours: ["t8", "t9", "t10", "t15", "t20", "t19", "t18", "t13"],
+        },
+        {
+          id: `t15`,
+          owner: "player2",
+          armies: 3,
+          neighbours: ["t9", "t10", "t20", "t19", "t14"],
+        },
+        {
+          id: `t16`,
+          owner: "player1",
+          armies: 3,
+          neighbours: ["t11", "t12", "t17", "t22", "t21"],
+        },
+        {
+          id: `t17`,
+          owner: "player2",
+          armies: 3,
+          neighbours: ["t11", "t12", "t13", "t18", "t23", "t22", "t21", "t16"],
+        },
+        {
+          id: `t18`,
+          owner: "player2",
+          armies: 3,
+          neighbours: ["t12", "t13", "t14", "t19", "t24", "t23", "t22", "t17"],
+        },
+        {
+          id: `t19`,
+          owner: "player1",
+          armies: 3,
+          neighbours: ["t13", "t14", "t15", "t20", "t25", "t24", "t23", "t18"],
+        },
+        {
+          id: `t20`,
+          owner: "player1",
+          armies: 3,
+          neighbours: ["t14", "t15", "t25", "t24", "t19"],
+        },
+        {
+          id: `t21`,
+          owner: "player1",
+          armies: 3,
+          neighbours: ["t16", "t17", "t22"],
+        },
+        {
+          id: `t22`,
+          owner: "player2",
+          armies: 3,
+          neighbours: ["t21", "t16", "t17", "t18", "t23"],
+        },
+        {
+          id: `t23`,
+          owner: "player2",
+          armies: 3,
+          neighbours: ["t22", "t17", "t18", "t19", "t24"],
+        },
+        {
+          id: `t24`,
+          owner: "player2",
+          armies: 3,
+          neighbours: ["t23", "t18", "t19", "t20", "t25"],
+        },
+        {
+          id: `t25`,
+          owner: "player1",
+          armies: 3,
+          neighbours: ["t24", "t19", "t20", "t25"],
+        },
+      ];
 
-        ];
+      let map = document.getElementById("map");
+      let selectedTerritory = null;
+      let movePhase = false;
 
-        let map = document.getElementById("map");
-        let selectedTerritory = null;
-        let movePhase = false;
+      function initializeGame() {
+        territories.forEach((territoryData) => {
+          let territory = document.createElement("div");
+          territory.classList.add("territory", territoryData.owner);
+          territory.id = territoryData.id;
+          territory.innerHTML = `${territoryData.owner}<br><span class='army-count'>Armies:${territoryData.armies}</span><br><span>${territoryData.id}</span>`;
+          territory.onclick = () => selectTerritory(territory);
+          map.appendChild(territory);
+        });
+      }
 
-        function initializeGame() {
-            territories.forEach((territoryData)=>{
-                let territory = document.createElement("div");
-                territory.classList.add("territory", territoryData.owner);
-                territory.id = territoryData.id;
-                territory.innerHTML = `${territoryData.owner}<br><span class='army-count'>Armies:${territoryData.armies}</span><br><span>${territoryData.id}</span>`;
-                territory.onclick = () => selectTerritory(territory);
-                map.appendChild(territory);
-                
-            })
+      function selectTerritory(territory) {
+        let territoryData = territories.find((t) => t.id === territory.id);
+        if (!selectedTerritory) {
+          if (territoryData.owner !== currentPlayer) return;
+          selectedTerritory = territory;
+          if (movePhase) {
+            territory.classList.add("moving");
+          } else {
+            territory.classList.add("attacking");
+          }
+        } else {
+          if (movePhase) {
+            moveArmies(selectedTerritory, territory);
+            selectedTerritory.classList.remove("moving");
+          } else {
+            territory.classList.add("defending");
+            attack(selectedTerritory, territory);
+            selectedTerritory.classList.remove("attacking");
+            territory.classList.remove("defending");
+          }
+          selectedTerritory = null;
+        }
+      }
+
+      function attack(from, to) {
+        let attackerData = territories.find((t) => t.id === from.id);
+        let defenderData = territories.find((t) => t.id === to.id);
+
+        if (attackerData.owner === defenderData.owner) {
+          alert("You cannot attack your own territory!");
+          return;
+        }
+        if (!attackerData.neighbours.includes(defenderData.id)) {
+          alert("You can only attack neigbors!");
+          return;
         }
 
-        function selectTerritory(territory) {
-            let territoryData = territories.find(t => t.id === territory.id);
-            if (!selectedTerritory) {
-                if (territoryData.owner !== currentPlayer) return;
-                selectedTerritory = territory;
-                if (movePhase) {
-                    territory.classList.add("moving");
-                } else {
-                    territory.classList.add("attacking");
-                }
-            } else {
-                if (movePhase) {
-                    moveArmies(selectedTerritory, territory);
-                    selectedTerritory.classList.remove("moving");
-                } else {
-                    territory.classList.add("defending");
-                    attack(selectedTerritory, territory);
-                    selectedTerritory.classList.remove("attacking");
-                    territory.classList.remove("defending");
-                }
-                selectedTerritory = null;
-            }
+        let attackerRoll = Math.floor(Math.random() * 6) + 1;
+        let defenderRoll = Math.floor(Math.random() * 6) + 1;
+
+        let message = `${from.id} (P1) attacks ${to.id} (P2)\nAttack roll: ${attackerRoll} | Defense roll: ${defenderRoll}`;
+
+        if (attackerRoll > defenderRoll) {
+          defenderData.armies -= 1;
+          if (defenderData.armies <= 0) {
+            defenderData.armies = attackerData.armies - 1;
+            attackerData.armies = 1;
+            defenderData.owner = attackerData.owner;
+            to.className = from.className;
+          }
+          message += "\nAttack successful!";
+        } else {
+          attackerData.armies -= 1;
+          message += "\nAttack failed!";
         }
 
-        function attack(from, to) {
-            let attackerData = territories.find(t => t.id === from.id);
-            let defenderData = territories.find(t => t.id === to.id);
+        alert(message);
+        updateTerritories();
+        movePhase = false;
+        switchTurn();
+        //document.getElementById("movePhaseIndicator").style.display = "block";
+       // document.getElementById("skipMoveButton").style.display = "block";
+      }
 
-            if (attackerData.owner === defenderData.owner) {
-                alert("You cannot attack your own territory!");
-                return;
-            }
-            if(!attackerData.neighbours.includes(defenderData.id)){
-                alert("You can only attack neigbors!");
-                return;
-            }
+      function moveArmies(from, to) {
+        let fromData = territories.find((t) => t.id === from.id);
+        let toData = territories.find((t) => t.id === to.id);
 
-            let attackerRoll = Math.floor(Math.random() * 6) + 1;
-            let defenderRoll = Math.floor(Math.random() * 6) + 1;
-
-            let message = `${from.id} (P1) attacks ${to.id} (P2)\nAttack roll: ${attackerRoll} | Defense roll: ${defenderRoll}`;
-
-            if (attackerRoll > defenderRoll) {
-                defenderData.armies -= 1;
-                if (defenderData.armies <= 0) {
-                    defenderData.armies = attackerData.armies - 1;
-                    attackerData.armies = 1;
-                    defenderData.owner = attackerData.owner;
-                    to.className = from.className;
-                }
-                message += "\nAttack successful!";
-            } else {
-                attackerData.armies -= 1;
-                message += "\nAttack failed!";
-            }
-
-            alert(message);
-            updateTerritories();
-            movePhase = true;
-            document.getElementById("movePhaseIndicator").style.display = "block";
-            document.getElementById("skipMoveButton").style.display = "block";
+        if (fromData.owner !== toData.owner) {
+          alert("You can only move armies between your own territories!");
+          return;
+        }
+        if (fromData.armies < 2) {
+          alert("You need at least 2 armies to move!");
+          return;
         }
 
-        function moveArmies(from, to) {
-            let fromData = territories.find(t => t.id === from.id);
-            let toData = territories.find(t => t.id === to.id);
+        let moveCount = Math.floor(fromData.armies / 2);
+        fromData.armies -= moveCount;
+        toData.armies += moveCount;
 
-            if (fromData.owner !== toData.owner) {
-                alert("You can only move armies between your own territories!");
-                return;
-            }
-            if (fromData.armies < 2) {
-                alert("You need at least 2 armies to move!");
-                return;
-            }
+        alert(`Moved ${moveCount} armies from ${from.id} to ${to.id}`);
+        updateTerritories();
+        movePhase = false;
+        endMovePhase();
+      }
 
-            let moveCount = Math.floor(fromData.armies / 2);
-            fromData.armies -= moveCount;
-            toData.armies += moveCount;
+      function skipMovePhase() {
+        alert("Skipping move phase.");
+        movePhase = false;
+        endMovePhase();
+      }
 
-            alert(`Moved ${moveCount} armies from ${from.id} to ${to.id}`);
-            updateTerritories();
-            movePhase = false;
-            endMovePhase();
-        }
+      function endMovePhase() {
+        document.getElementById("movePhaseIndicator").style.display = "none";
+        document.getElementById("skipMoveButton").style.display = "none";
+        switchTurn();
+      }
 
-        function skipMovePhase() {
-            alert("Skipping move phase.");
-            movePhase = false;
-            endMovePhase();
-        }
+      function updateTerritories() {
+        territories.forEach((t) => {
+          let element = document.getElementById(t.id);
+          element.innerHTML = `${t.owner}<br><span class='army-count'>Armies:${t.armies}</span><br><span>${t.id}</span>`;
+        });
+      }
 
-        function endMovePhase() {
-            document.getElementById("movePhaseIndicator").style.display = "none";
-            document.getElementById("skipMoveButton").style.display = "none";
-            switchTurn();
-        }
-
-        function updateTerritories() {
-            territories.forEach(t => {
-                let element = document.getElementById(t.id);
-                element.innerHTML = `${t.owner}<br><span class='army-count'>Armies:${t.armies}</span><br><span>${t.id}</span>`;
-
+      function aiTurn() {
+        const aiTerritories = territories.filter(
+          (territory) => territory.owner === "player2"
+        );
+        console.log("aiTerritories", aiTerritories);
+        const strongestTerritories = aiTerritories.sort((a, b) => {
+          if (a.armies > b.armies) {
+            return -1;
+          }
+          if (a.armies < b.armies) {
+            return 1;
+          }
+          return 0;
+        });
+        console.log("strongestTerritories", strongestTerritories);
+        attackerTerritory = null;
+        attackedTerritory = null;
+        strongestTerritories.forEach((territory) => {
+          if (!attackerTerritory) {
+            territory.neighbours.forEach((neighbour) => {
+              const neighborData = territories.find((t) => {
+                return t.id === neighbour;
+              });
+              if (neighborData.owner === "player1") {
+                attackerTerritory = territory;
+                attackedTerritory = neighborData;
+              }
             });
-        }
+          }
+        });
+        console.log("attackerTerritory", attackerTerritory)
+        console.log("attackedTerritory",attackedTerritory)
+        alert(`${attackerTerritory.id} attacks ${attackedTerritory.id}`)
+        attack(attackerTerritory, attackedTerritory);
+      }
 
-        function switchTurn() {
-            currentPlayer = currentPlayer === "player1" ? "player2" : "player1";
-            document.getElementById('turnIndicator').innerText = `${currentPlayer === "player1" ? "Player 1" : "Player 2"}'s turn`;
+      function switchTurn() {
+        currentPlayer = currentPlayer === "player1" ? "player2" : "player1";
+        if (currentPlayer === "player2") {
+          aiTurn();
         }
+        document.getElementById("turnIndicator").innerText = `${
+          currentPlayer === "player1" ? "Player 1" : "Player 2"
+        }'s turn`;
+      }
 
-        initializeGame();
+      initializeGame();
     </script>
-</body>
+  </body>
 </html>
